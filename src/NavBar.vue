@@ -1,10 +1,10 @@
 <template>
     <div class="wrapper">
         <div class="logo"><img src="./assets/csv.png" ></div>
-        <div class="nav-item">New file</div>
+        <div @click="newFile" class="nav-item">Create New Sheet</div>
         <label for="inp" class="nav-item">Open csv file</label>
         <input @change="handlefileChange" hidden id="inp" type="file">
-        <button class="nav-item">Export csv file</button>
+        <button @click="exportFile" class="nav-item">Export csv file</button>
     </div>
 </template>
 
@@ -13,6 +13,12 @@
         methods:{
             handlefileChange(e) {
                 this.$emit("fileChange",e)
+            },
+            exportFile() {
+                this.$emit("exportFile")
+            },
+            newFile() {
+                this.$emit("newFile")
             }
         }
     }

@@ -1,6 +1,10 @@
 <template>
   <div class="App">
-    <NavBar @fileChange="handleFile" />
+    <NavBar
+      @fileChange="handleFile"
+      @exportFile="exportFile"
+      @newFile="newFile"
+    />
     <table>
       <tbody>
         <tr>
@@ -54,6 +58,7 @@
 </template>
 
 <script>
+import { toRaw } from "vue";
 import NavBar from "./NavBar.vue";
 
 let revertChangeFunc = () => {};
@@ -63,50 +68,56 @@ export default {
   data() {
     return {
       data: [],
-      minColumn : 15
+      minColumn: 15,
+      minRow: 15,
+      sheetName: ""
     };
   },
 
   mounted() {
-    fetch("./sheet.csv")
-      .then((res) => this.handleFile(undefined, res))
+    fetch("./sheet.csv").then((res) => this.handleFile(undefined, res));
   },
 
   methods: {
-    async handleFile(e,file) {
-      
-      if (!file)
-      file = e.target.files[0];
-      
+    makeFit() {
+      if (this.data.length < this.minRow) {
+        let diff = this.minRow - this.data.length;
+        for (let i = 0; i < diff; i++) {
+          this.data.push([]);
+        }
+      }
+    },
+    async handleFile(e, file) {
+      if (!file) file = e.target.files[0];
+
       let data = await file.text();
 
       let temp = data.split("\r").map((el) => el.replace("\n", ""));
-        console.log(temp);
 
-        temp = temp.map((str) => {
-          let inter = [];
-          let temp = "";
-          let splitComma = true;
+      temp = temp.map((str) => {
+        let inter = [];
+        let temp = "";
+        let splitComma = true;
 
-          for (let i = 0; i < str.length; i++) {
-            if (splitComma && str[i] == ",") {
-              inter.push(temp);
-              temp = "";
-            } else if (splitComma && str[i] == '"') {
-              splitComma = false;
-            } else if (!splitComma && str[i] == '"') {
-              splitComma = true;
-            } else {
-              temp += str[i];
-            }
-
+        for (let i = 0; i < str.length; i++) {
+          if (splitComma && str[i] == ",") {
+            inter.push(temp);
+            temp = "";
+          } else if (splitComma && str[i] == '"') {
+            splitComma = false;
+          } else if (!splitComma && str[i] == '"') {
+            splitComma = true;
+          } else {
+            temp += str[i];
           }
-          if (temp) inter.push(temp)
+        }
+        if (temp) inter.push(temp);
 
-          return inter;
-        });
+        return inter;
+      });
 
-        this.data = temp
+      this.data = temp;
+      this.makeFit();
     },
     handleRowHeadClick(e) {
       revertChangeFunc();
@@ -168,6 +179,22 @@ export default {
     inputChangeHandler(e) {
       const [ri, ci] = e.currentTarget.getAttribute("data-key").split("-");
       this.data[ri][ci] = e.currentTarget.value;
+    },
+    exportFile() {
+      let csvContent =
+        "data:text/csv;charset=utf-8," +
+        this.data.map((e) => e.join(",")).join("\n");
+      let encodedUri = encodeURI(csvContent);
+      let link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "my_data.csv");
+      link.click();
+    },
+    newFile() {
+      this.data = [[]];
+      this.minColumn = parseInt(prompt("col"));
+      this.minRow = parseInt(prompt("row"));
+      this.makeFit();
     },
   },
 };
