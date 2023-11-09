@@ -4,6 +4,8 @@
       @fileChange="handleFile"
       @exportFile="exportFile"
       @newFile="newFile"
+      :fileName="sheetName"
+      @fileNameChange="sheetName = $event"
     />
     <div ref="dropListener" class="drop-listener"></div>
     <div class="table-wrapper">
@@ -39,7 +41,7 @@
               :data-key="`${rowInd}-${colInd}`"
               :key="`${rowInd}-${colInd}`"
               :class="`col col${colInd}`"
-              v-for="(cell, colInd) in Math.max(cols.length, minColumn)"
+              v-for="(cell, colInd) in Math.max(data[rowInd].length, minColumn)"
               @click="handleCellClick"
               @dblclick="handleDblCellClick"
               tabindex="1"
@@ -48,7 +50,7 @@
               <input
                 :spellcheck="false"
                 :data-key="`${rowInd}-${colInd}`"
-                :value="cols[colInd]"
+                :value="data[rowInd][colInd]"
                 @input="inputChangeHandler"
                 readonly
                 type="text"
@@ -74,7 +76,7 @@ export default {
       data: [],
       minColumn: 15,
       minRow: 15,
-      sheetName: "",
+      sheetName: "Sample document.csv",
     };
   },
 
@@ -118,6 +120,10 @@ export default {
       }
     },
     async handleFile(e, file) {
+
+      this.minColumn = 15
+      this.minRow = 15
+
       if (!file) file = e.target.files[0];
 
       let data = await file.text();
@@ -345,8 +351,8 @@ td input:read-only::selection {
   justify-content: center;
 }
 
-.head span::-webkit-resizer {
-}
+/* .head span::-webkit-resizer {
+} */
 
 td:focus-within {
   outline: 2px solid rgb(73, 73, 73);
